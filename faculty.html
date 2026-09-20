@@ -1,14 +1,28 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Faculty Login | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head>
+<title>Faculty Login | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script></head>
 <body><div class="portal-page">
 <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a>
 <nav><a href="index.html">Home</a><a href="features.html">Features</a><a href="departments.html">Departments</a><a href="leaderboard.html">Leaderboard</a></nav>
 <a class="outline" href="index.html">← Home</a></header>
 <main class="login-shell"><div class="page-tabs"><a href="student.html">Student Login</a><a href="faculty.html" class="active">Faculty Login</a></div>
-<section class="login-card"><p class="eyebrow">FACULTY ACCESS</p><h1>Faculty Login</h1><p class="login-sub">Sign in using your faculty name and password to create quizzes, publish assessments and view reports.</p>
-<form id="facultyForm"><input id="facultyName" required placeholder="Faculty Name"><input id="password" required type="password" placeholder="Password"><button class="primary large" type="submit">Login to Faculty Dashboard →</button></form>
-<p id="msg" class="message"></p><div class="login-help"><span>Demo mode: any non-empty password is accepted.</span><a href="index.html">Back to Home</a></div></section></main>
-</div><script>
-document.getElementById('facultyForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('facultyName').value.trim();localStorage.setItem('aqpFacultyName',name);localStorage.setItem('aqpFacultyLoggedIn','true');document.getElementById('msg').textContent='Login accepted for '+name+'. Opening dashboard...';setTimeout(()=>location.href='faculty-dashboard.html',350)});
-</script></body></html>
+<section class="login-card"><p class="eyebrow">FACULTY ACCESS</p><h1>Faculty Login</h1><p class="login-sub">Sign in using your registered faculty email and password to create quizzes, publish assessments and view reports.</p>
+<form id="facultyForm"><input id="facultyName" required type="email" autocomplete="username" placeholder="Faculty Email"><input id="password" required type="password" placeholder="Password"><button class="primary large" type="submit">Login to Faculty Dashboard →</button></form>
+<p id="msg" class="message"></p><div class="login-help"><span>Use your registered Supabase faculty account.</span><a href="index.html">Back to Home</a></div></section></main>
+</div><<script>
+const sb=window.aqpSupabase;
+document.getElementById('facultyForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const email=document.getElementById('facultyName').value.trim();
+ const password=document.getElementById('password').value;
+ const msg=document.getElementById('msg');
+ msg.textContent='Signing in...';
+ const {data,error}=await sb.auth.signInWithPassword({email,password});
+ if(error){msg.textContent='Login failed: '+error.message;return;}
+ const {data:profile}=await sb.from('faculty_profiles').select('full_name,role').eq('id',data.user.id).single();
+ localStorage.setItem('aqpFacultyName',profile?.full_name||email);
+ localStorage.setItem('aqpFacultyLoggedIn','true');
+ msg.textContent='Login successful. Opening dashboard...';
+ setTimeout(()=>location.href='faculty-dashboard.html',300);
+});
+</script></script></body></html>
