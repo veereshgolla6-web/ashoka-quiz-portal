@@ -15,10 +15,10 @@
 </section>
 
 <section class="kpi-grid">
-<div class="kpi"><span>Published Quizzes</span><strong>12</strong><small>+3 this month</small></div>
-<div class="kpi"><span>Total Attempts</span><strong>486</strong><small>Across all quizzes</small></div>
-<div class="kpi"><span>Average Score</span><strong>78%</strong><small>Current semester</small></div>
-<div class="kpi"><span>Active Quizzes</span><strong>3</strong><small>Open for students</small></div>
+<div class="kpi clickable-card" onclick="location.href='quiz-management.html'"><span>Published Quizzes</span><strong>12</strong><small>Open Quiz Management →</small></div>
+<div class="kpi clickable-card" onclick="location.href='attempts.html'"><span>Total Attempts</span><strong>486</strong><small>Open Student Attempts →</small></div>
+<div class="kpi clickable-card" onclick="location.href='reports.html'"><span>Average Score</span><strong>78%</strong><small>Open Reports →</small></div>
+<div class="kpi clickable-card" onclick="location.href='quiz-management.html?filter=active'"><span>Active Quizzes</span><strong>3</strong><small>Open Active Quizzes →</small></div>
 </section>
 
 <section class="dash-grid">
@@ -30,10 +30,10 @@
 <button onclick="location.href='question-bank.html'">☷ Question Bank<br><small>Manage questions</small></button>
 <button onclick="document.getElementById('reports').scrollIntoView({behavior:'smooth'})">▤ Reports<br><small>View performance</small></button>
 </div></div>
-<div class="dash-card"><p class="eyebrow">FACULTY PROFILE</p><h2 id="profileName">Faculty</h2><p>Role: Faculty</p><div class="metric"><span>Department</span><strong>Academic</strong></div><div class="metric"><span>Quizzes created</span><strong>12</strong></div><div class="metric"><span>Students reached</span><strong>486</strong></div></div>
+<div class="dash-card clickable-panel" onclick="location.href='faculty-profile.html'"><p class="eyebrow">FACULTY PROFILE</p><h2 id="profileName">Faculty</h2><p>Role: Faculty</p><div class="metric"><span>Department</span><strong>Academic</strong></div><div class="metric"><span>Quizzes created</span><strong>12</strong></div><div class="metric"><span>Students reached</span><strong>486</strong></div></div>
 </section>
 
-<section class="dash-card" id="quizzes" style="margin-bottom:18px">
+<section class="dash-card" id="quizzes" style="margin-bottom:18px"><div class="section-action"><a class="ghost" href="quiz-management.html">Open Quiz Management →</a></div>
 <p class="eyebrow">QUIZ MANAGEMENT</p><h2>Recent Quizzes</h2>
 <div class="table">
 <div class="thead"><span>Quiz</span><span>Subject</span><span>Target</span><span>Status</span><span>Attempts</span></div>
@@ -51,7 +51,7 @@
 <div class="bar"><span>EEE</span><i style="width:71%"></i><b>71%</b></div>
 <div class="bar"><span>CIVIL</span><i style="width:68%"></i><b>68%</b></div></div>
 <div class="dash-card"><p class="eyebrow">REPORTS</p><h2>Faculty Reports</h2><p>Track attempts, scores, completion time and student performance.</p>
-<div class="action-grid"><button onclick="alert('Quiz report opened in demo mode.')">📊 Quiz Report</button><button onclick="alert('Student report opened in demo mode.')">👥 Student Report</button><button onclick="alert('Ranking report opened in demo mode.')">🏆 Ranking Report</button><button onclick="showQR()">▣ QR / Quiz Link</button></div></div>
+<div class="action-grid"><button onclick="location.href='reports.html?type=quiz'">📊 Quiz Report</button><button onclick="location.href='reports.html?type=student'">👥 Student Report</button><button onclick="location.href='reports.html?type=ranking'">🏆 Ranking Report</button><button onclick="showQR()">▣ QR / Quiz Link</button></div></div>
 </section>
 </main>
 
