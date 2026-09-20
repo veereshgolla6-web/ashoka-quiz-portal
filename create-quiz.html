@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style><style>.upload-zone input{display:none}.upload-zone.file-selected{border-color:#20b879;background:#f4fffa}.publish-error{outline:3px solid #e5484d!important;box-shadow:0 0 0 6px rgba(229,72,77,.12)!important;transition:.2s}</style></head>
+<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style><style>.upload-zone input{display:block;position:absolute;opacity:0;width:220px;height:46px;cursor:pointer;z-index:3}.upload-zone{position:relative}.upload-zone label{position:relative;z-index:1}.upload-zone.file-selected{border-color:#20b879;background:#f4fffa}.publish-error{outline:3px solid #e5484d!important;box-shadow:0 0 0 6px rgba(229,72,77,.12)!important;transition:.2s}</style></head>
 <body><div class="portal-page">
 <header class="topbar"><a class="brand" href="faculty-dashboard.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a><nav><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="create-quiz.html">Create Quiz</a><a href="leaderboard.html">Leaderboard</a></nav><button class="outline" onclick="location.href='faculty-dashboard.html'">← Dashboard</button></header>
 <main class="dashboard">
 <section class="page-title"><div><p class="eyebrow">FACULTY • QUIZ CREATOR</p><h1>Create New Quiz</h1><p>Build a 25–30 question MCQ assessment and publish it for students.</p></div><button class="outline" onclick="location.href='faculty-dashboard.html'">Cancel</button></section>
 <section class="dash-card upload-source-card"><p class="eyebrow">AI QUESTION SOURCE</p><h2>Generate Quiz from DOCX / PDF</h2><p>Upload faculty notes, question papers or study material. The browser extracts readable text and prepares it as a quiz source.</p><div class="upload-zone" id="uploadZone">
-<input id="sourceFile" type="file" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/msword,.doc">
+<input id="sourceFile" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 <label for="sourceFile" id="chooseFileBtn">📄 Choose PDF or Word Document</label>
 <span id="fileName">No file selected</span>
 <button type="button" class="ghost" id="extractBtn">Extract Content</button>
@@ -29,7 +29,7 @@ const sourceFile=document.getElementById('sourceFile');
 const chooseFileBtn=document.getElementById('chooseFileBtn');
 const extractBtn=document.getElementById('extractBtn');
 sourceFile.addEventListener('change',handleFileSelected);
-chooseFileBtn.addEventListener('click',e=>{e.preventDefault();sourceFile.click()});
+
 extractBtn.addEventListener('click',extractSource);
 function handleFileSelected(){
  const f=sourceFile.files && sourceFile.files[0];
@@ -39,7 +39,7 @@ function handleFileSelected(){
    document.getElementById('sourceStatus').textContent='Please choose a PDF, DOC or DOCX file.';
    return;
  }
- const allowed=/\\.(pdf|docx?|)$/i.test(f.name);
+ const allowed=/\.(pdf|docx?)$/i.test(f.name);
  if(!allowed){
    sourceFile.value='';
    document.getElementById('fileName').textContent='Unsupported file type';
