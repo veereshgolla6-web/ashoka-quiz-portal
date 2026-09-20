@@ -92,5 +92,5 @@ function showQR(){
  document.getElementById('qrModal').classList.remove('hidden');
 }
 function closeQR(){document.getElementById('qrModal').classList.add('hidden')}
-document.getElementById('logoutBtn').onclick=async()=>{await sb.auth.signOut();localStorage.removeItem('aqpFacultyLoggedIn');localStorage.removeItem('aqpFacultyName');location.href='faculty.html'};
+document.getElementById("logoutBtn").onclick=()=>{localStorage.removeItem("aqpFacultyLoggedIn");localStorage.removeItem("aqpFacultyName");localStorage.removeItem("aqpDemoMode");location.href="faculty.html";};
 </script></div></body></html>
