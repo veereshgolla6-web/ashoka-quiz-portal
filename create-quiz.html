@@ -216,57 +216,44 @@ function parseAnswerKey(source){
  return key;
 }
 function parseMCQs(source){
- let s=source.replace(/\r/g,'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n');
- const answerKey=parseAnswerKey(s), out=[];
- const lines=s.split('\n').map(x=>x.trim()).filter(Boolean);
- let cur=null;
- function finish(){
-   if(!cur)return;
-   cur.text=cur.text.replace(/^\s*(?:Q\s*)?\d+[.)-:]\s*/i,'').trim();
-   cur.options=cur.options.filter(Boolean).map(x=>x.replace(/^[A-D][.)\-:]\s*/i,'').trim());
-   if(cur.text && cur.options.length===4) out.push(cur);
-   cur=null;
- }
- for(let raw of lines){
-   let line=raw;
-   const q=line.match(/^(?:Q\s*)?(\d{1,3})[.)-:]\s*(.+)$/i);
-   if(q){
-     finish();
-     cur={num:Number(q[1]),text:q[2],options:[],correct:'',marks:1};
-     // Handle questions where A-D options are on the same line.
-     const pieces=[...cur.text.matchAll(/(?:^|\s)([A-D])[.)\-:]\s*([^]*?)(?=\s+[A-D][.)\-:]\s|$)/gi)];
-     if(pieces.length===4){
-       const first=cur.text.indexOf(pieces[0][0].trim());
-       cur.text=cur.text.slice(0,first).trim();
-       pieces.forEach(m=>cur.options.push(m[2].trim()));
-     }
-     continue;
-   }
-   const op=line.match(/^([A-D])[.)\-:]\s*(.+)$/i);
-   if(cur&&op){cur.options[op[1].toUpperCase().charCodeAt(0)-65]=op[2];continue}
-   if(cur&&/^(?:answer|ans|correct)\s*[:\-]/i.test(line)){
-     const m=line.match(/([ABCD])\b/i);if(m)cur.correct=m[1].toUpperCase();continue
-   }
-   if(cur&&cur.options.length<4)cur.text+=' '+line;
- }
- finish();
- // Second-pass fallback for PDFs where line breaks were lost.
- if(out.length<5){
-   const blockRegex=/(?:^|\n)\s*(?:Q\s*)?(\d{1,3})[.)-:]\s*([\s\S]*?)(?=(?:\n|\s+)(?:Q\s*)?\d{1,3}[.)-:]\s+|$)/gi;
-   let m;
-   while((m=blockRegex.exec(s))){
-     const block=m[2].trim();
-     const opts=[...block.matchAll(/(?:^|\s)([A-D])[.)\-:]\s*([^]*?)(?=\s+[A-D][.)\-:]\s|$)/gi)];
-     if(opts.length===4){
-       const cut=block.indexOf(opts[0][0].trim());
-       const q={num:Number(m[1]),text:block.slice(0,cut).trim(),options:opts.map(x=>x[2].trim()),correct:'',marks:1};
-       q.correct=answerKey[q.num]||'';
-       if(q.text&&!out.some(x=>x.num===q.num)) out.push(q);
+ const s=source.replace(/\r/g,'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim();
+ const answerKey=parseAnswerKey(s);
+ const out=[];
+ // Split the extracted document into question blocks. This works even when Word
+ // extraction joins an option to the next option, e.g. "A. PB. y".
+ const blocks=[...s.matchAll(/(?:^|\n)\s*(?:Q\s*)?(\d{1,3})[.)-:]\s*([\s\S]*?)(?=(?:\n|\s+)(?:Q\s*)?\d{1,3}[.)-:]\s+|\n?\s*ANSWER\s+KEY\b|$)/gi)];
+ for(const m of blocks){
+   const num=Number(m[1]);
+   let block=(m[2]||'').trim();
+   block=block.replace(/\n?\s*(?:Answer|Ans|Correct)\s*:\s*[ABCD]\b[\s\S]*$/i,'');
+   block=block.replace(/\n?\s*Marks\s*:\s*\d+(?:\.\d+)?\s*$/i,'').trim();
+
+   const marksMatch=block.match(/(?:\n|\s)Marks\s*:\s*(\d+(?:\.\d+)?)/i);
+   const marks=marksMatch?Number(marksMatch[1]):1;
+   const answerMatch=(m[2]||'').match(/(?:Answer|Ans|Correct)\s*:\s*([ABCD])\b/i);
+   const correct=(answerMatch?answerMatch[1].toUpperCase():(answerKey[num]||''));
+
+   // Find A-D option markers anywhere in the block, not only at line starts.
+   const optionMatches=[...block.matchAll(/(?:^|\s|\n)([A-D])[.)\-:]\s*/gi)];
+   const opts=[];
+   let questionText='';
+   if(optionMatches.length>=4){
+     const first=optionMatches[0];
+     questionText=block.slice(0,first.index).trim();
+     for(let i=0;i<4;i++){
+       const start=optionMatches[i].index + optionMatches[i][0].length;
+       const end=i<3 ? optionMatches[i+1].index : block.length;
+       let val=block.slice(start,end).trim();
+       val=val.replace(/\s+/g,' ').trim();
+       opts.push(val);
      }
    }
+
+   if(questionText && opts.length===4 && opts.every(Boolean)){
+     out.push({num,text:questionText.replace(/^\s*(?:Q\s*)?\d{1,3}[.)-:]\s*/i,''),options:opts,correct,marks});
+   }
  }
- out.sort((a,b)=>a.num-b.num);
- out.forEach((q,i)=>q.correct=q.correct||answerKey[q.num]||answerKey[i+1]||'');
+ out.sort((x,y)=>x.num-y.num);
  return out;
 }
 function prepareGeneratedQuiz(){
