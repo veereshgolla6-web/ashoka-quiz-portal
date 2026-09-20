@@ -5,17 +5,20 @@
 .real-file-input{display:block!important;position:static!important;opacity:1!important;width:100%!important;height:auto!important;cursor:pointer!important;z-index:auto!important}
 .real-file-input::file-selector-button{border:0;border-radius:10px;padding:13px 18px;margin-right:12px;background:#f0edff;color:#5d3be9;font-weight:800;cursor:pointer}
 .upload-zone.file-selected{border-color:#20b879!important;background:#f4fffa!important}
+</style><style>
+.upload-zone .real-file-input,.upload-zone input[type=file]{display:block!important;opacity:1!important;position:static!important;visibility:visible!important}
+.upload-zone.file-selected{border-color:#20b879!important;background:#f4fffa!important}
 </style></head>
 <body><div class="portal-page">
 <header class="topbar"><a class="brand" href="faculty-dashboard.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a><nav><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="create-quiz.html">Create Quiz</a><a href="leaderboard.html">Leaderboard</a></nav><button class="outline" onclick="location.href='faculty-dashboard.html'">← Dashboard</button></header>
 <main class="dashboard">
 <section class="page-title"><div><p class="eyebrow">FACULTY • QUIZ CREATOR</p><h1>Create New Quiz</h1><p>Build a 25–30 question MCQ assessment and publish it for students.</p></div><button class="outline" onclick="location.href='faculty-dashboard.html'">Cancel</button></section>
-<section class="dash-card upload-source-card"><p class="eyebrow">AI QUESTION SOURCE</p><h2>Generate Quiz from DOCX / PDF</h2><p>Upload faculty notes, question papers or study material. The browser extracts readable text and prepares it as a quiz source.</p><div class="upload-zone" id="uploadZone">
-<div class="file-picker-wrap">
-<input id="sourceFile" class="real-file-input" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+<section class="dash-card upload-source-card"><p class="eyebrow">AI QUESTION SOURCE</p><h2>Generate Quiz from DOCX / PDF</h2><p>Upload faculty notes, question papers or study material. The browser extracts readable text and prepares it as a quiz source.</p><div class="upload-zone" id="uploadZone" style="position:relative;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<div class="file-picker-wrap" style="display:block!important;min-width:280px">
+<input id="sourceFile" type="file" accept="*/*" style="display:block!important;opacity:1!important;position:static!important;width:280px!important;height:44px!important;cursor:pointer!important" onchange="window.aqpFileChosen(this)">
 </div>
 <span id="fileName">No file selected</span>
-<button type="button" class="ghost" id="extractBtn">Extract Content</button>
+<button type="button" class="ghost" onclick="extractSource()">Extract Content</button>
 </div><textarea id="sourceText" class="source-text" placeholder="Extracted document text will appear here..."></textarea><div class="builder-form-grid"><input id="sourceQuestionCount" type="number" min="5" max="30" value="25" placeholder="Questions to generate"><select id="difficulty"><option>Easy</option><option selected>Medium</option><option>Hard</option></select><button class="primary" onclick="prepareGeneratedQuiz()">Prepare Quiz from Document →</button></div><p id="sourceStatus" class="message"></p></section><section class="dash-card" style="margin-bottom:18px"><div class="builder-form-grid">
 <input id="title" placeholder="Quiz Title *"><select id="subject"><option value="">Select Subject *</option><option>Python Programming</option><option>Data Structures</option><option>Artificial Intelligence</option><option>Engineering Mathematics</option><option>Database Management Systems</option><option>Computer Networks</option></select>
 <select id="department"><option>CSE</option><option>CSEAI</option><option>ECE</option><option>EEE</option><option>CIVIL</option><option>All Departments</option></select>
@@ -36,6 +39,16 @@ const extractBtn=document.getElementById('extractBtn');
 sourceFile.addEventListener('change',handleFileSelected);
 
 extractBtn.addEventListener('click',extractSource);
+function aqpFileChosen(input){
+ const f=input.files && input.files[0];
+ const name=document.getElementById('fileName');
+ const status=document.getElementById('sourceStatus');
+ const zone=document.getElementById('uploadZone');
+ if(!f){name.textContent='No file selected';status.textContent='';zone.classList.remove('file-selected');return;}
+ name.textContent='✓ '+f.name+' • '+Math.max(1,Math.round(f.size/1024))+' KB';
+ status.textContent='File selected successfully. Click Extract Content.';
+ zone.classList.add('file-selected');
+}
 function handleFileSelected(){
  const f=sourceFile.files && sourceFile.files[0];
  const zone=document.getElementById('uploadZone');
