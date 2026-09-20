@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style></head>
+<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style><style>.publish-error{outline:3px solid #e5484d!important;box-shadow:0 0 0 6px rgba(229,72,77,.12)!important;transition:.2s}</style></head>
 <body><div class="portal-page">
 <header class="topbar"><a class="brand" href="faculty-dashboard.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a><nav><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="create-quiz.html">Create Quiz</a><a href="leaderboard.html">Leaderboard</a></nav><button class="outline" onclick="location.href='faculty-dashboard.html'">← Dashboard</button></header>
 <main class="dashboard">
@@ -63,7 +63,22 @@ function valid(){
  const p=payload();
  if(!p.title||!p.subject){alert('Enter Quiz Title and select Subject.');return false}
  if(qs.length<25){alert('Please add at least 25 questions before publishing.');return false}
- for(let i=0;i<qs.length;i++){if(!qs[i].text||!qs[i].options||qs[i].options.length<4||qs[i].options.some(x=>!x)||!qs[i].correct){alert('Complete Question '+(i+1)+' including all options and correct answer.');return false}}
+ for(let i=0;i<qs.length;i++){
+   const q=qs[i]||{};
+   const incomplete=!q.text||!q.options||q.options.length<4||q.options.some(x=>!x)||!q.correct;
+   if(incomplete){
+     alert('Question '+(i+1)+' is incomplete. Please enter the question, all four options, and select the correct answer.');
+     const cards=document.querySelectorAll('.question-editor');
+     if(cards[i]){
+       cards[i].scrollIntoView({behavior:'smooth',block:'center'});
+       cards[i].classList.add('publish-error');
+       setTimeout(()=>cards[i].classList.remove('publish-error'),3000);
+       const firstEmpty=cards[i].querySelector('textarea:not(:valid),input[value=""]');
+       if(firstEmpty) setTimeout(()=>firstEmpty.focus(),400);
+     }
+     return false;
+   }
+ }
  return true
 }
 function saveDraft(){localStorage.setItem('aqpQuizDraft',JSON.stringify(payload()));document.getElementById('status').textContent='Draft saved successfully.'}
