@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Faculty Dashboard | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head>
+<title>Faculty Dashboard | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script></head>
 <body><div class="portal-page">
 <header class="topbar">
 <a class="brand" href="index.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a>
@@ -70,6 +70,7 @@
 <div class="portal-card" style="text-align:center"><button class="close" onclick="closeQR()">×</button><p class="eyebrow">QUIZ ACCESS</p><h2>Share Quiz</h2><p>Demo access link for the selected quiz.</p><img id="qrImage" alt="Quiz QR code" style="width:190px;height:190px;border-radius:14px;border:1px solid #e7e8f2;padding:8px;background:#fff"><p id="quizLink" style="word-break:break-all;font-weight:700;color:#5d3be9"></p><button class="primary" onclick="navigator.clipboard?.writeText(document.getElementById('quizLink').textContent);alert('Quiz link copied.')">Copy Quiz Link</button></div></div>
 
 <script>
+const sb=window.aqpSupabase;
 const logged=localStorage.getItem('aqpFacultyLoggedIn');
 if(!logged){location.href='faculty.html'}
 const name=localStorage.getItem('aqpFacultyName')||'Faculty';
@@ -85,11 +86,11 @@ function saveQuiz(){
  setTimeout(closeBuilder,900);
 }
 function showQR(){
- const link=location.origin+location.pathname.replace('faculty-dashboard.html','quiz.html')+'?quiz=demo';
+ const p=JSON.parse(localStorage.getItem('aqpPublishedQuiz')||'{}'); const link=location.origin+location.pathname.replace('faculty-dashboard.html','quiz.html')+'?code='+encodeURIComponent(p.code||'');
  document.getElementById('qrImage').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(link);
- document.getElementById('quizLink').textContent=link;
+ document.getElementById('quizLink').textContent=link||'Publish a quiz first.';
  document.getElementById('qrModal').classList.remove('hidden');
 }
 function closeQR(){document.getElementById('qrModal').classList.add('hidden')}
-document.getElementById('logoutBtn').onclick=()=>{localStorage.removeItem('aqpFacultyLoggedIn');localStorage.removeItem('aqpFacultyName');location.href='faculty.html'};
+document.getElementById('logoutBtn').onclick=async()=>{await sb.auth.signOut();localStorage.removeItem('aqpFacultyLoggedIn');localStorage.removeItem('aqpFacultyName');location.href='faculty.html'};
 </script></div></body></html>
