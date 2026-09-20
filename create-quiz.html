@@ -29,7 +29,19 @@ async function extractSource(){
   if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
    if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs',true)}
    const buf=await f.arrayBuffer(); const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
-   for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();text+=tc.items.map(x=>x.str).join(' ')+'\\n'}
+   for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p); const tc=await page.getTextContent(); const rows={};
+    tc.items.forEach(item=>{
+      const y=Math.round(item.transform?.[5]||0);
+      const k=String(y); if(!rows[k]) rows[k]=[];
+      rows[k].push(item);
+    });
+    Object.keys(rows).sort((a,b)=>Number(b)-Number(a)).forEach(k=>{
+      rows[k].sort((a,b)=>(a.transform?.[4]||0)-(b.transform?.[4]||0));
+      text+=rows[k].map(x=>x.str).join(' ')+'\\n';
+    });
+    text+='\\n';
+   }
   }else{
    if(!window.mammoth) await loadScript('https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js');
    text=(await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;
