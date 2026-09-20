@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Faculty Dashboard | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="portal-page">
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a>
+<nav><a class="active" href="faculty-dashboard.html">Dashboard</a><a href="#quizzes">My Quizzes</a><a href="#reports">Reports</a><a href="index.html">Home</a></nav>
+<div class="top-actions"><button class="outline" id="logoutBtn">Logout</button></div>
+</header>
+
+<main class="dashboard">
+<section class="page-title">
+<div><p class="eyebrow">FACULTY CONTROL CENTER</p><h1>Welcome, <span id="facultyDisplay">Faculty</span></h1><p>Create, publish and monitor assessments from one place.</p></div>
+<button class="primary large" onclick="openBuilder()">＋ Create New Quiz</button>
+</section>
+
+<section class="kpi-grid">
+<div class="kpi"><span>Published Quizzes</span><strong>12</strong><small>+3 this month</small></div>
+<div class="kpi"><span>Total Attempts</span><strong>486</strong><small>Across all quizzes</small></div>
+<div class="kpi"><span>Average Score</span><strong>78%</strong><small>Current semester</small></div>
+<div class="kpi"><span>Active Quizzes</span><strong>3</strong><small>Open for students</small></div>
+</section>
+
+<section class="dash-grid">
+<div class="dash-card">
+<p class="eyebrow">QUICK ACTIONS</p><h2>Assessment Tools</h2><p>Start a new assessment or manage your existing quiz activities.</p>
+<div class="action-grid">
+<button onclick="openBuilder()">📝 Create Quiz<br><small>Build 25–30 MCQs</small></button>
+<button onclick="showQR()">▣ Generate QR<br><small>Share quiz access</small></button>
+<button onclick="document.getElementById('quizzes').scrollIntoView({behavior:'smooth'})">☷ Question Bank<br><small>Manage questions</small></button>
+<button onclick="document.getElementById('reports').scrollIntoView({behavior:'smooth'})">▤ Reports<br><small>View performance</small></button>
+</div></div>
+<div class="dash-card"><p class="eyebrow">FACULTY PROFILE</p><h2 id="profileName">Faculty</h2><p>Role: Faculty</p><div class="metric"><span>Department</span><strong>Academic</strong></div><div class="metric"><span>Quizzes created</span><strong>12</strong></div><div class="metric"><span>Students reached</span><strong>486</strong></div></div>
+</section>
+
+<section class="dash-card" id="quizzes" style="margin-bottom:18px">
+<p class="eyebrow">QUIZ MANAGEMENT</p><h2>Recent Quizzes</h2>
+<div class="table">
+<div class="thead"><span>Quiz</span><span>Subject</span><span>Target</span><span>Status</span><span>Attempts</span></div>
+<div class="row"><strong>Python Unit 1 Assessment</strong><span>Python Programming</span><span>CSE / I Year</span><b>Published</b><span>128</span></div>
+<div class="row"><strong>Data Structures Quiz</strong><span>Data Structures</span><span>CSE / II Year</span><b>Published</b><span>96</span></div>
+<div class="row"><strong>AI Fundamentals</strong><span>Artificial Intelligence</span><span>CSEAI / II Year</span><b>Active</b><span>74</span></div>
+<div class="row"><strong>Mathematics Unit Test</strong><span>Engineering Mathematics</span><span>All Branches</span><b>Draft</b><span>—</span></div>
+</div></section>
+
+<section class="dash-grid" id="reports">
+<div class="dash-card"><p class="eyebrow">PERFORMANCE</p><h2>Department Snapshot</h2>
+<div class="bar"><span>CSE</span><i style="width:82%"></i><b>82%</b></div>
+<div class="bar"><span>CSEAI</span><i style="width:79%"></i><b>79%</b></div>
+<div class="bar"><span>ECE</span><i style="width:74%"></i><b>74%</b></div>
+<div class="bar"><span>EEE</span><i style="width:71%"></i><b>71%</b></div>
+<div class="bar"><span>CIVIL</span><i style="width:68%"></i><b>68%</b></div></div>
+<div class="dash-card"><p class="eyebrow">REPORTS</p><h2>Faculty Reports</h2><p>Track attempts, scores, completion time and student performance.</p>
+<div class="action-grid"><button onclick="alert('Quiz report opened in demo mode.')">📊 Quiz Report</button><button onclick="alert('Student report opened in demo mode.')">👥 Student Report</button><button onclick="alert('Ranking report opened in demo mode.')">🏆 Ranking Report</button><button onclick="showQR()">▣ QR / Quiz Link</button></div></div>
+</section>
+</main>
+
+<div class="portal hidden" id="builder">
+<div class="portal-card">
+<button class="close" onclick="closeBuilder()">×</button><p class="eyebrow">QUIZ BUILDER</p><h2>Create New Quiz</h2><p>Set the assessment details first. Questions can be added after saving the quiz draft.</p>
+<input id="quizTitle" placeholder="Quiz Title">
+<select id="subject"><option value="">Select Subject</option><option>Python Programming</option><option>Data Structures</option><option>Artificial Intelligence</option><option>Engineering Mathematics</option></select>
+<div class="builder-grid"><select id="department"><option>CSE</option><option>CSEAI</option><option>ECE</option><option>EEE</option><option>CIVIL</option><option>All Departments</option></select><select id="year"><option>I Year</option><option>II Year</option><option>III Year</option><option>IV Year</option></select></div>
+<div class="builder-grid"><select id="section"><option>All Sections</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option></select><input id="duration" type="number" min="5" value="30" placeholder="Duration (minutes)"></div>
+<div class="builder-grid"><input id="questionCount" type="number" min="1" max="50" value="25" placeholder="Questions"><input id="marks" type="number" min="1" value="1" placeholder="Marks / question"></div>
+<button class="primary" style="width:100%;margin-top:12px" onclick="saveQuiz()">Save Quiz Draft →</button>
+<p id="builderMsg" class="message"></p></div></div>
+
+<div class="portal hidden" id="qrModal">
+<div class="portal-card" style="text-align:center"><button class="close" onclick="closeQR()">×</button><p class="eyebrow">QUIZ ACCESS</p><h2>Share Quiz</h2><p>Demo access link for the selected quiz.</p><img id="qrImage" alt="Quiz QR code" style="width:190px;height:190px;border-radius:14px;border:1px solid #e7e8f2;padding:8px;background:#fff"><p id="quizLink" style="word-break:break-all;font-weight:700;color:#5d3be9"></p><button class="primary" onclick="navigator.clipboard?.writeText(document.getElementById('quizLink').textContent);alert('Quiz link copied.')">Copy Quiz Link</button></div></div>
+
+<script>
+const logged=localStorage.getItem('aqpFacultyLoggedIn');
+if(!logged){location.href='faculty.html'}
+const name=localStorage.getItem('aqpFacultyName')||'Faculty';
+document.getElementById('facultyDisplay').textContent=name;
+document.getElementById('profileName').textContent=name;
+function openBuilder(){document.getElementById('builder').classList.remove('hidden')}
+function closeBuilder(){document.getElementById('builder').classList.add('hidden')}
+function saveQuiz(){
+ const title=document.getElementById('quizTitle').value.trim()||'Untitled Quiz';
+ const count=Math.max(1,Math.min(50,Number(document.getElementById('questionCount').value)||25));
+ localStorage.setItem('aqpLastQuiz',JSON.stringify({title,count,subject:document.getElementById('subject').value,department:document.getElementById('department').value,year:document.getElementById('year').value,section:document.getElementById('section').value,duration:document.getElementById('duration').value}));
+ document.getElementById('builderMsg').textContent=title+' saved as draft with '+count+' questions.';
+ setTimeout(closeBuilder,900);
+}
+function showQR(){
+ const link=location.origin+location.pathname.replace('faculty-dashboard.html','quiz.html')+'?quiz=demo';
+ document.getElementById('qrImage').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(link);
+ document.getElementById('quizLink').textContent=link;
+ document.getElementById('qrModal').classList.remove('hidden');
+}
+function closeQR(){document.getElementById('qrModal').classList.add('hidden')}
+document.getElementById('logoutBtn').onclick=()=>{localStorage.removeItem('aqpFacultyLoggedIn');localStorage.removeItem('aqpFacultyName');location.href='faculty.html'};
+</script></div></body></html>
