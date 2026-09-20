@@ -41,7 +41,14 @@ const sb=window.aqpSupabase;
 const code=new URLSearchParams(location.search).get('code');
 let quiz=null, questions=[], current=0, answers=[], startedAt=0, timerId=null, submitted=false;
 
-function escText(v){return String(v??'');}
+function escText(v){
+ return String(v??'')
+   .replace(/&/g,'&amp;')
+   .replace(/</g,'&lt;')
+   .replace(/>/g,'&gt;')
+   .replace(/"/g,'&quot;')
+   .replace(/'/g,'&#39;');
+}
 function renderStart(){
  document.getElementById('app').innerHTML=
  '<section class="student-start"><div class="start-card">'+
