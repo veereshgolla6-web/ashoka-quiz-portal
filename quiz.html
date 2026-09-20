@@ -1,1 +1,116 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head><body><div class="quiz-page"><header class="topbar"><div class="brand"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>LIVE ASSESSMENT</small></span></div><div class="timer" id="timer">30:00</div></header><main class="live-quiz"><div class="quiz-meta"><span>PYTHON • UNIT 1</span><b id="progressText">Question 1 of 5</b></div><div class="live-progress"><i id="bar"></i></div><section class="question-card"><p class="qnum">QUESTION 01</p><h1 id="question">Which keyword is used to define a function in Python?</h1><div id="answers" class="answer-grid"></div><div class="quiz-nav"><button class="outline" id="prev">← Previous</button><button class="primary" id="next">Next →</button></div></section></main></div><script>const qs=[['Which keyword is used to define a function in Python?',['func','def','function','define'],1],['Which collection is ordered and mutable?',['tuple','set','list','frozenset'],2],['What is the output type of input() in Python 3?',['int','float','str','bool'],2],['Which symbol starts a comment?',['//','#','<!--','**'],1],['Which is a valid Python file extension?',['.java','.py','.html','.cpp'],1]];let n=0,answers=Array(qs.length);let sec=1800;const q=document.getElementById('question'),a=document.getElementById('answers'),bar=document.getElementById('bar'),pt=document.getElementById('progressText');function render(){const x=qs[n];q.textContent=x[0];pt.textContent='Question '+(n+1)+' of '+qs.length;bar.style.width=((n+1)/qs.length*100)+'%';a.innerHTML=x[1].map((v,i)=>'<button class="answer '+(answers[n]===i?'chosen':'')+'" onclick="pick('+i+')"><b>'+String.fromCharCode(65+i)+'</b>'+v+'</button>').join('');document.getElementById('prev').disabled=n===0;document.getElementById('next').textContent=n===qs.length-1?'Submit Quiz →':'Next →'}function pick(i){answers[n]=i;render()}document.getElementById('prev').onclick=()=>{if(n)n--;render()};document.getElementById('next').onclick=()=>{if(n<qs.length-1){n++;render()}else{let score=answers.reduce((s,v,i)=>s+(v===qs[i][2]?1:0),0);alert('Quiz submitted! Score: '+score+'/'+qs.length);location.href='student.html'}};setInterval(()=>{sec--;const m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');document.getElementById('timer').textContent=m+':'+s;if(sec<=0)document.getElementById('next').click()},1000);render()</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Quiz | Ashoka Quiz Portal</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<style>
+.quiz-loading{max-width:760px;margin:70px auto;padding:40px;text-align:center}
+.student-start{max-width:760px;margin:45px auto}
+.student-start .start-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 20px 50px rgba(25,28,65,.08)}
+.start-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.start-grid input{width:100%;padding:15px;border:1px solid var(--line);border-radius:12px;font-size:16px}
+.live-quiz{max-width:900px}
+.quiz-meta{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.question-card{margin-top:24px}
+.answer-grid{display:grid;gap:12px;margin-top:24px}
+.answer{display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:17px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;font-size:16px}
+.answer:hover,.answer.chosen{border-color:#6d4aff;background:#f5f2ff}
+.answer b{min-width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#eeeafe;color:#5d3be9}
+.quiz-result{max-width:760px;margin:60px auto;padding:40px;background:#fff;border:1px solid var(--line);border-radius:24px;text-align:center}
+.score-big{font-size:56px;font-weight:900;color:#5d3be9;margin:15px}
+@media(max-width:650px){.start-grid{grid-template-columns:1fr}.quiz-page .topbar{padding:12px}.live-quiz{padding:0 15px}}
+</style>
+</head>
+<body>
+<div class="quiz-page">
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>LIVE ASSESSMENT</small></span></a>
+<div class="timer" id="timer">--:--</div>
+</header>
+
+<main id="app">
+<section class="quiz-loading"><h1>Loading Quiz...</h1><p id="loadMsg">Connecting to the online quiz server.</p></section>
+</main>
+</div>
+
+<script>
+const sb=window.aqpSupabase;
+const code=new URLSearchParams(location.search).get('code');
+let quiz=null, questions=[], current=0, answers=[], startedAt=0, timerId=null, submitted=false;
+
+function escText(v){return String(v??'');}
+function renderStart(){
+ document.getElementById('app').innerHTML=
+ '<section class="student-start"><div class="start-card">'+
+ '<p class="eyebrow">ASHOKA QUIZ PORTAL • LIVE QUIZ</p>'+
+ '<h1>'+escText(quiz.title)+'</h1>'+
+ '<p>'+escText(quiz.subject)+' • '+questions.length+' Questions • '+Number(quiz.duration_minutes)+' Minutes</p>'+
+ '<div class="start-grid"><input id="studentName" placeholder="Student Name *" required><input id="rollNumber" placeholder="Roll Number *" required></div>'+
+ '<button class="primary large" id="startBtn">Start Quiz →</button>'+
+ '<p id="startMsg" class="message"></p></div></section>';
+ document.getElementById('startBtn').onclick=startQuiz;
+}
+function startQuiz(){
+ const name=document.getElementById('studentName').value.trim(), roll=document.getElementById('rollNumber').value.trim();
+ if(name.length<2||!roll){document.getElementById('startMsg').textContent='Enter your name and roll number.';return}
+ sessionStorage.setItem('aqpStudentName',name);sessionStorage.setItem('aqpRollNumber',roll);
+ startedAt=Date.now();answers=Array(questions.length).fill(null);current=0;submitted=false;
+ startTimer();renderQuiz();
+}
+function startTimer(){
+ let left=Math.max(60,Number(quiz.duration_minutes)*60);
+ const timer=document.getElementById('timer');
+ const tick=()=>{const m=String(Math.floor(left/60)).padStart(2,'0'),s=String(left%60).padStart(2,'0');timer.textContent=m+':'+s;if(left<=0){clearInterval(timerId);submitQuiz(true)}left--};
+ tick();timerId=setInterval(tick,1000);
+}
+function renderQuiz(){
+ const q=questions[current];
+ document.getElementById('app').innerHTML=
+ '<main class="live-quiz"><div class="quiz-meta"><span>'+escText(quiz.subject).toUpperCase()+'</span><b>Question '+(current+1)+' of '+questions.length+'</b></div>'+
+ '<div class="live-progress"><i style="width:'+((current+1)/questions.length*100)+'%"></i></div>'+
+ '<section class="question-card"><p class="qnum">QUESTION '+String(current+1).padStart(2,'0')+'</p>'+
+ '<h1>'+escText(q.question_text)+'</h1><div class="answer-grid">'+
+ q.options.map((v,i)=>'<button class="answer '+(answers[current]===i?'chosen':'')+'" data-i="'+i+'"><b>'+String.fromCharCode(65+i)+'</b><span>'+escText(v)+'</span></button>').join('')+
+ '</div><div class="quiz-nav"><button class="outline" id="prev">← Previous</button><button class="primary" id="next">'+(current===questions.length-1?'Submit Quiz →':'Next →')+'</button></div></section></main>';
+ document.querySelectorAll('.answer').forEach(btn=>btn.onclick=()=>{answers[current]=Number(btn.dataset.i);renderQuiz()});
+ document.getElementById('prev').onclick=()=>{if(current>0){current--;renderQuiz()}};
+ document.getElementById('next').onclick=()=>{if(current<questions.length-1){current++;renderQuiz()}else submitQuiz(false)};
+}
+async function submitQuiz(auto){
+ if(submitted)return;
+ submitted=true;clearInterval(timerId);
+ const timeSeconds=Math.max(1,Math.round((Date.now()-startedAt)/1000));
+ const score=questions.reduce((sum,q,i)=>sum+(answers[i]===q.correct_index?1:0),0);
+ const name=sessionStorage.getItem('aqpStudentName')||'Student', roll=sessionStorage.getItem('aqpRollNumber')||'Unknown';
+ try{
+   const {error}=await sb.from('submissions').insert({quiz_id:quiz.id,student_name:name,roll_number:roll,score,total_questions:questions.length,time_seconds:timeSeconds,answers:answers});
+   if(error) throw error;
+   showResult(score,timeSeconds,auto);
+ }catch(err){
+   console.error(err);
+   showResult(score,timeSeconds,auto,'Your score was calculated, but online submission failed: '+err.message);
+ }
+}
+function showResult(score,timeSeconds,auto,error){
+ const mins=Math.floor(timeSeconds/60),secs=timeSeconds%60;
+ document.getElementById('app').innerHTML='<section class="quiz-result"><p class="eyebrow">QUIZ SUBMITTED</p><h1>'+escText(quiz.title)+'</h1>'+
+ '<div class="score-big">'+score+' / '+questions.length+'</div><p>Completion time: '+mins+'m '+secs+'s</p>'+
+ (auto?'<p>Time expired. Your quiz was submitted automatically.</p>':'')+
+ (error?'<p class="message">'+escText(error)+'</p>':'')+
+ '<button class="primary" onclick="location.href=\'index.html\'">Back to Portal</button></section>';
+}
+async function loadQuiz(){
+ if(!code){document.getElementById('loadMsg').textContent='Invalid quiz link. No quiz code was provided.';return}
+ const {data:q,error:e1}=await sb.from('quizzes').select('id,code,title,subject,duration_minutes,department,year,section').eq('code',code).eq('published',true).single();
+ if(e1||!q){document.getElementById('loadMsg').textContent='Quiz not found or no longer published.';return}
+ const {data:qs,error:e2}=await sb.from('questions').select('id,question_no,question_text,options,correct_index').eq('quiz_id',q.id).order('question_no',{ascending:true});
+ if(e2||!qs||!qs.length){document.getElementById('loadMsg').textContent='This quiz has no questions yet.';return}
+ quiz=q;questions=qs;renderStart();
+}
+loadQuiz();
+</script>
+</body>
+</html>
