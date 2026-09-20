@@ -8,7 +8,7 @@
 <main class="login-shell"><div class="page-tabs"><a href="student.html">Student Login</a><a href="faculty.html" class="active">Faculty Login</a></div>
 <section class="login-card"><p class="eyebrow">FACULTY ACCESS</p><h1>Faculty Login</h1><p class="login-sub">Sign in using your faculty name and password to create quizzes, publish assessments and view reports.</p>
 <form id="facultyForm"><input id="facultyName" required placeholder="Faculty Name"><input id="password" required type="password" placeholder="Password"><button class="primary large" type="submit">Login to Faculty Dashboard →</button></form>
-<p id="msg" class="message"></p><div class="login-help"><span>Faculty name is used instead of Faculty ID.</span><a href="faculty.html">Stay on Login</a></div></section></main>
+<p id="msg" class="message"></p><div class="login-help"><span>Demo mode: any non-empty password is accepted.</span><a href="index.html">Back to Home</a></div></section></main>
 </div><script>
-document.getElementById('facultyForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('facultyName').value.trim();document.getElementById('msg').textContent='Login accepted for '+name+'.';setTimeout(()=>location.href='faculty-dashboard.html',500)});
+document.getElementById('facultyForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('facultyName').value.trim();localStorage.setItem('aqpFacultyName',name);localStorage.setItem('aqpFacultyLoggedIn','true');document.getElementById('msg').textContent='Login accepted for '+name+'. Opening dashboard...';setTimeout(()=>location.href='faculty-dashboard.html',350)});
 </script></body></html>
