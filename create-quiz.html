@@ -27,7 +27,9 @@ async function extractSource(){
  try{
   let text='';
   if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
-   if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs',true)}
+   if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');}
+   if(!window.pdfjsLib) throw new Error('PDF reader failed to load');
+   window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
    const buf=await f.arrayBuffer(); const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
    for(let p=1;p<=pdf.numPages;p++){
     const page=await pdf.getPage(p); const tc=await page.getTextContent(); const rows={};
@@ -44,13 +46,23 @@ async function extractSource(){
    }
   }else{
    if(!window.mammoth) await loadScript('https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js');
+   if(!window.mammoth) throw new Error('Word reader failed to load');
    text=(await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;
   }
   document.getElementById('sourceText').value=text.slice(0,120000);
   document.getElementById('sourceStatus').textContent='Content extracted. Review it, then prepare the quiz.';
- }catch(err){document.getElementById('sourceStatus').textContent='Could not extract this file in the browser. Try a text-based PDF or DOCX.'}
+  }catch(err){
+   console.error('Document extraction error:',err);
+   document.getElementById('sourceStatus').textContent='Could not read this file. Please use a text-based PDF or DOCX and try again.';
+ }
 }
-function loadScript(src,module=false){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;if(module)s.type='module';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+function loadScript(src){
+ return new Promise((resolve,reject)=>{
+   const s=document.createElement('script'); s.src=src; s.async=true;
+   s.onload=resolve; s.onerror=()=>reject(new Error('Failed to load document reader'));
+   document.head.appendChild(s);
+ });
+}
 function parseAnswerKey(source){
  const key={};
  const matches=[...source.matchAll(/(?:^|\\n)\\s*(\\d+)\\s*[-.)=:]\\s*([ABCD])\\b/gi)];
