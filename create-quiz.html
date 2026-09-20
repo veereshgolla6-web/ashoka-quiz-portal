@@ -219,42 +219,68 @@ function parseMCQs(source){
  const s=source.replace(/\r/g,'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim();
  const answerKey=parseAnswerKey(s);
  const out=[];
- // Split the extracted document into question blocks. This works even when Word
- // extraction joins an option to the next option, e.g. "A. PB. y".
- const blocks=[...s.matchAll(/(?:^|\n)\s*(?:Q\s*)?(\d{1,3})[.)-:]\s*([\s\S]*?)(?=(?:\n|\s+)(?:Q\s*)?\d{1,3}[.)-:]\s+|\n?\s*ANSWER\s+KEY\b|$)/gi)];
- for(const m of blocks){
-   const num=Number(m[1]);
-   let block=(m[2]||'').trim();
-   block=block.replace(/\n?\s*(?:Answer|Ans|Correct)\s*:\s*[ABCD]\b[\s\S]*$/i,'');
-   block=block.replace(/\n?\s*Marks\s*:\s*\d+(?:\.\d+)?\s*$/i,'').trim();
 
-   const marksMatch=block.match(/(?:\n|\s)Marks\s*:\s*(\d+(?:\.\d+)?)/i);
-   const marks=marksMatch?Number(marksMatch[1]):1;
-   const answerMatch=(m[2]||'').match(/(?:Answer|Ans|Correct)\s*:\s*([ABCD])\b/i);
-   const correct=(answerMatch?answerMatch[1].toUpperCase():(answerKey[num]||''));
+ function parseBlock(num, block){
+   let raw=block.trim();
+   // Remove the answer/marks footer from the question body.
+   raw=raw.replace(/\s*(?:Answer|Ans|Correct)\s*:\s*[ABCD]\b[\s\S]*$/i,'').trim();
+   raw=raw.replace(/\s*Marks\s*:\s*\d+(?:\.\d+)?\s*$/i,'').trim();
 
-   // Find A-D option markers anywhere in the block, not only at line starts.
-   const optionMatches=[...block.matchAll(/(?:^|\s|\n)([A-D])[.)\-:]\s*/gi)];
+   // Options may be separated by newlines OR merged by Word, e.g. "A. PB. y".
+   const optionMatches=[...raw.matchAll(/([A-D])[.)\-:]\s*/gi)];
+   if(optionMatches.length<4) return null;
+
+   // Use the first four option markers. The question text is before A.
+   const first=optionMatches[0];
+   let questionText=raw.slice(0,first.index).trim();
    const opts=[];
-   let questionText='';
-   if(optionMatches.length>=4){
-     const first=optionMatches[0];
-     questionText=block.slice(0,first.index).trim();
-     for(let i=0;i<4;i++){
-       const start=optionMatches[i].index + optionMatches[i][0].length;
-       const end=i<3 ? optionMatches[i+1].index : block.length;
-       let val=block.slice(start,end).trim();
-       val=val.replace(/\s+/g,' ').trim();
-       opts.push(val);
-     }
+   for(let i=0;i<4;i++){
+     const start=optionMatches[i].index+optionMatches[i][0].length;
+     const end=i<3?optionMatches[i+1].index:raw.length;
+     let value=raw.slice(start,end).replace(/\s+/g,' ').trim();
+     value=value.replace(/(?:Answer|Ans|Correct)\s*:\s*[ABCD]\b[\s\S]*$/i,'').trim();
+     if(value) opts.push(value);
    }
 
-   if(questionText && opts.length===4 && opts.every(Boolean)){
-     out.push({num,text:questionText.replace(/^\s*(?:Q\s*)?\d{1,3}[.)-:]\s*/i,''),options:opts,correct,marks});
+   // Prefer an explicit answer immediately after this question; otherwise use answer key.
+   const answerInBlock=(block.match(/(?:Answer|Ans|Correct)\s*:\s*([ABCD])\b/i)||[])[1];
+   const correct=(answerInBlock||answerKey[num]||'').toUpperCase();
+   const marksMatch=block.match(/Marks\s*:\s*(\d+(?:\.\d+)?)/i);
+   const marks=marksMatch?Number(marksMatch[1]):1;
+
+   if(!questionText || opts.length!==4 || opts.some(x=>!x)) return null;
+   questionText=questionText.replace(/^\s*(?:Q\s*)?\d{1,3}[.)\-:]\s*/i,'').trim();
+   return {num:Number(num),text:questionText,options:opts,correct,marks};
+ }
+
+ // First, handle Q1., Q2., ... documents. This is the safest mode for the
+ // uploaded unit-1 mcq.docx because option text can contain numbers too.
+ const qMatches=[...s.matchAll(/(?:^|\n)\s*Q\s*(\d{1,3})[.)\-:]\s*/gi)];
+ if(qMatches.length>=5){
+   for(let i=0;i<qMatches.length;i++){
+     const start=qMatches[i].index + qMatches[i][0].length;
+     const end=i+1<qMatches.length?qMatches[i+1].index:s.length;
+     const q=parseBlock(qMatches[i][1],s.slice(start,end));
+     if(q) out.push(q);
+   }
+ }else{
+   // Generic numbered-question mode for documents using 1., 2., ... without Q.
+   // Require a plausible question-start boundary to avoid splitting numbers in code.
+   const nMatches=[...s.matchAll(/(?:^|\n|(?<=\b(?:Marks|Answer)\s*:\s*[A-D]))\s*(\d{1,3})[.)\-:]\s+/gi)];
+   for(let i=0;i<nMatches.length;i++){
+     const start=nMatches[i].index+nMatches[i][0].length;
+     const end=i+1<nMatches.length?nMatches[i+1].index:s.length;
+     const q=parseBlock(nMatches[i][1],s.slice(start,end));
+     if(q) out.push(q);
    }
  }
- out.sort((x,y)=>x.num-y.num);
- return out;
+
+ const seen=new Set();
+ return out.filter(q=>{
+   if(seen.has(q.num)) return false;
+   seen.add(q.num);
+   return true;
+ }).sort((x,y)=>x.num-y.num);
 }
 function prepareGeneratedQuiz(){
  const source=document.getElementById('sourceText').value.trim(), count=Math.min(30,Math.max(5,Number(document.getElementById('sourceQuestionCount').value)||25));
