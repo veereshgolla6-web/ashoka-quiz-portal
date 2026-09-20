@@ -1,0 +1,9 @@
+const portal=document.getElementById('portal'),content=document.getElementById('portal-content');
+const openPortal=(type)=>{portal.classList.remove('hidden');content.innerHTML=type==='faculty'?faculty():student()};
+const student=()=>`<p class="eyebrow">STUDENT PORTAL</p><h2>Join your quiz</h2><p>Enter the quiz code shared by your faculty member, or use the QR/link provided to you.</p><input id="quizCode" placeholder="Enter quiz code (e.g. AQ-26ES03)"><input id="roll" placeholder="Roll number"><button class="primary" id="join">Continue to Quiz →</button><div class="portal-links"><button>📷 Scan QR</button><button>🔗 Open Quiz Link</button></div>`;
+const faculty=()=>`<p class="eyebrow">FACULTY ACCESS</p><h2>Faculty Dashboard</h2><p>Sign in to create quizzes, publish QR links and review student performance.</p><input placeholder="Faculty ID"><input type="password" placeholder="Password"><button class="primary" id="login">Sign In →</button><div class="portal-links"><button>➕ Create Quiz</button><button>📊 View Reports</button></div>`;
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>openPortal(b.dataset.view)));
+document.querySelector('.close').addEventListener('click',()=>portal.classList.add('hidden'));
+portal.addEventListener('click',e=>{if(e.target===portal)portal.classList.add('hidden')});
+document.addEventListener('click',e=>{if(e.target.id==='join'){const code=document.getElementById('quizCode').value.trim();if(!code){alert('Please enter a quiz code.');return}alert('Quiz code accepted. The live quiz engine will open after database integration.')}if(e.target.id==='login')alert('Faculty authentication will be connected to the secure database in the next build.')});
+document.querySelector('.menu').addEventListener('click',()=>document.querySelector('nav').classList.toggle('mobile-open'));
