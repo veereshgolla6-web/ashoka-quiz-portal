@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style><style>.upload-zone input{display:block;position:absolute;opacity:0;width:220px;height:46px;cursor:pointer;z-index:3}.upload-zone{position:relative}.upload-zone label{position:relative;z-index:1}.upload-zone.file-selected{border-color:#20b879;background:#f4fffa}.publish-error{outline:3px solid #e5484d!important;box-shadow:0 0 0 6px rgba(229,72,77,.12)!important;transition:.2s}</style><style>
+<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style><style>.upload-zone input{display:block;position:absolute;opacity:0;width:220px;height:46px;cursor:pointer;z-index:3}.upload-zone{position:relative}.upload-zone label{position:relative;z-index:1}.upload-zone.file-selected{border-color:#20b879;background:#f4fffa}.publish-error{outline:3px solid #e5484d!important;box-shadow:0 0 0 6px rgba(229,72,77,.12)!important;transition:.2s}</style><style>
 .file-picker-wrap{display:flex;align-items:center;min-width:300px}
 .real-file-input{display:block!important;position:static!important;opacity:1!important;width:100%!important;height:auto!important;cursor:pointer!important;z-index:auto!important}
 .real-file-input::file-selector-button{border:0;border-radius:10px;padding:13px 18px;margin-right:12px;background:#f0edff;color:#5d3be9;font-weight:800;cursor:pointer}
@@ -32,7 +32,8 @@
 <div id="qrBox" class="qr-box hidden"><h3>Student Access</h3><img id="publishQR" alt="Quiz QR"><p id="publishLink"></p><button class="ghost" onclick="navigator.clipboard?.writeText(document.getElementById('publishLink').textContent);document.getElementById('qrCopy').textContent='Link copied.'">Copy Quiz Link</button><small id="qrCopy"></small></div></section>
 </main></div>
 <script>
-if(!localStorage.getItem('aqpFacultyLoggedIn')) location.href='faculty.html';
+const sb=window.aqpSupabase;
+(async()=>{const {data:{user}}=await sb.auth.getUser();if(!user){location.href='faculty.html';}})();
 const qs=[]; const max=30;
 const sourceFile=document.getElementById('sourceFile');
 sourceFile.addEventListener('change',handleFileSelected);
@@ -335,18 +336,43 @@ function valid(){
  return true
 }
 function saveDraft(){localStorage.setItem('aqpQuizDraft',JSON.stringify(payload()));document.getElementById('status').textContent='Draft saved successfully.'}
-function publishQuiz(){
+async function publishQuiz(){
  if(!valid())return;
- const p=payload();p.id='QZ-'+Date.now();p.status='Published';p.publishedAt=new Date().toISOString();
- localStorage.setItem('aqpPublishedQuiz',JSON.stringify(p));
- document.getElementById('status').textContent='Published successfully.';
- document.getElementById('publishedSummary').textContent=p.title+' • '+p.questions.length+' questions • '+p.duration+' minutes • '+p.department+' / '+p.year+' / '+p.section;
- document.getElementById('publishSuccess').classList.remove('hidden');
- window.scrollTo({top:document.getElementById('publishSuccess').offsetTop-80,behavior:'smooth'});
+ const p=payload();
+ const status=document.getElementById('status');
+ status.textContent='Publishing quiz online...';
+ try{
+   const {data:{user},error:userError}=await sb.auth.getUser();
+   if(userError||!user){location.href='faculty.html';return;}
+   const code=Array.from(crypto.getRandomValues(new Uint8Array(6))).map(x=>(x%36).toString(36)).join('').toUpperCase();
+   const {data:quiz,error:quizError}=await sb.from('quizzes').insert({
+     code,title:p.title,subject:p.subject,duration_minutes:p.duration,
+     published:true,created_by:user.id,department:p.department,year:p.year,section:p.section
+   }).select('id,code').single();
+   if(quizError) throw quizError;
+   const rows=p.questions.map((q,i)=>({
+     quiz_id:quiz.id,question_no:i+1,question_text:q.text,
+     options:q.options,correct_index:'ABCD'.indexOf(q.correct),option_order:[0,1,2,3]
+   }));
+   const {error:questionError}=await sb.from('questions').insert(rows);
+   if(questionError){
+     await sb.from('quizzes').delete().eq('id',quiz.id);
+     throw questionError;
+   }
+   p.id=quiz.id;p.code=quiz.code;p.status='Published';p.publishedAt=new Date().toISOString();
+   localStorage.setItem('aqpPublishedQuiz',JSON.stringify(p));
+   document.getElementById('status').textContent='Published online successfully.';
+   document.getElementById('publishedSummary').textContent=p.title+' • '+p.questions.length+' questions • '+p.duration+' minutes • '+p.department+' / '+p.year+' / '+p.section+' • Code: '+quiz.code;
+   document.getElementById('publishSuccess').classList.remove('hidden');
+   window.scrollTo({top:document.getElementById('publishSuccess').offsetTop-80,behavior:'smooth'});
+ }catch(err){
+   console.error(err);
+   status.textContent='Publish failed: '+(err.message||'Please try again.');
+ }
 }
 function showPublishedQR(){
  const p=JSON.parse(localStorage.getItem('aqpPublishedQuiz')||'{}');
- const link=location.origin+location.pathname.replace('create-quiz.html','quiz.html')+'?quiz='+encodeURIComponent(p.id||'published');
+ const link=location.origin+location.pathname.replace('create-quiz.html','quiz.html')+'?code='+encodeURIComponent(p.code||'');
  document.getElementById('publishQR').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(link);
  document.getElementById('publishLink').textContent=link;
  document.getElementById('qrBox').classList.remove('hidden');
