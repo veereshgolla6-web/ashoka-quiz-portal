@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head>
+<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"><style>.hidden{display:none!important}.publish-success{margin-top:20px;padding:30px;border:2px solid #b9efd7;background:#f4fffa;border-radius:18px;text-align:center}.success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#20b879;color:#fff;font-size:30px;font-weight:900}.publish-success h2{margin:8px 0;color:#16744f}.publish-success p{color:#55706a}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.qr-box{margin-top:15px;padding:25px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px}.qr-box img{width:200px;height:200px}.qr-box p{word-break:break-all;font-weight:700;color:#5d3be9}</style></head>
 <body><div class="portal-page">
 <header class="topbar"><a class="brand" href="faculty-dashboard.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a><nav><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="create-quiz.html">Create Quiz</a><a href="leaderboard.html">Leaderboard</a></nav><button class="outline" onclick="location.href='faculty-dashboard.html'">← Dashboard</button></header>
 <main class="dashboard">
@@ -13,7 +13,9 @@
 <input id="duration" type="number" min="5" value="30" placeholder="Duration (minutes)">
 </div></section>
 <section class="dash-card"><div class="quiz-editor-head"><div><p class="eyebrow">QUESTION BANK</p><h2>Questions <span id="counter">0 / 25</span></h2></div><button class="ghost" onclick="addQuestion()">＋ Add Question</button></div><div id="questions"></div>
-<div class="publish-bar"><span id="status">Add your questions. Correct answers are required.</span><button class="outline" onclick="saveDraft()">Save Draft</button><button class="primary" onclick="publishQuiz()">Publish Quiz →</button></div></section>
+<div class="publish-bar"><span id="status">Add your questions. Correct answers are required.</span><button class="outline" onclick="saveDraft()">Save Draft</button><button class="primary" onclick="publishQuiz()">Publish Quiz →</button></div>
+<div id="publishSuccess" class="publish-success hidden"><div class="success-icon">✓</div><h2>Quiz Published Successfully!</h2><p id="publishedSummary">Your quiz is now ready for students.</p><div class="success-actions"><button class="primary" onclick="location.href='quiz-management.html'">Open Quiz Management</button><button class="ghost" onclick="showPublishedQR()">Generate QR / Quiz Link</button><button class="outline" onclick="location.href='faculty-dashboard.html'">Faculty Dashboard</button></div></div>
+<div id="qrBox" class="qr-box hidden"><h3>Student Access</h3><img id="publishQR" alt="Quiz QR"><p id="publishLink"></p><button class="ghost" onclick="navigator.clipboard?.writeText(document.getElementById('publishLink').textContent);document.getElementById('qrCopy').textContent='Link copied.'">Copy Quiz Link</button><small id="qrCopy"></small></div></section>
 </main></div>
 <script>
 if(!localStorage.getItem('aqpFacultyLoggedIn')) location.href='faculty.html';
@@ -65,6 +67,21 @@ function valid(){
  return true
 }
 function saveDraft(){localStorage.setItem('aqpQuizDraft',JSON.stringify(payload()));document.getElementById('status').textContent='Draft saved successfully.'}
-function publishQuiz(){if(!valid())return;const p=payload();p.id='QZ-'+Date.now();p.status='Published';localStorage.setItem('aqpPublishedQuiz',JSON.stringify(p));document.getElementById('status').textContent='Quiz published successfully. Student access is ready.';setTimeout(()=>location.href='faculty-dashboard.html',900)}
+function publishQuiz(){
+ if(!valid())return;
+ const p=payload();p.id='QZ-'+Date.now();p.status='Published';p.publishedAt=new Date().toISOString();
+ localStorage.setItem('aqpPublishedQuiz',JSON.stringify(p));
+ document.getElementById('status').textContent='Published successfully.';
+ document.getElementById('publishedSummary').textContent=p.title+' • '+p.questions.length+' questions • '+p.duration+' minutes • '+p.department+' / '+p.year+' / '+p.section;
+ document.getElementById('publishSuccess').classList.remove('hidden');
+ window.scrollTo({top:document.getElementById('publishSuccess').offsetTop-80,behavior:'smooth'});
+}
+function showPublishedQR(){
+ const p=JSON.parse(localStorage.getItem('aqpPublishedQuiz')||'{}');
+ const link=location.origin+location.pathname.replace('create-quiz.html','quiz.html')+'?quiz='+encodeURIComponent(p.id||'published');
+ document.getElementById('publishQR').src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(link);
+ document.getElementById('publishLink').textContent=link;
+ document.getElementById('qrBox').classList.remove('hidden');
+}
 for(let i=0;i<25;i++) addQuestion();
 </script></body></html>
