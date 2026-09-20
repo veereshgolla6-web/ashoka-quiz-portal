@@ -6,9 +6,19 @@
 <nav><a href="index.html">Home</a><a href="features.html">Features</a><a href="departments.html">Departments</a><a href="leaderboard.html">Leaderboard</a></nav>
 <a class="outline" href="index.html">← Home</a></header>
 <main class="login-shell"><div class="page-tabs"><a href="student.html" class="active">Student Login</a><a href="faculty.html">Faculty Login</a></div>
-<section class="login-card"><p class="eyebrow">STUDENT ACCESS</p><h1>Student Login</h1><p class="login-sub">Sign in with your college roll number and password to access quizzes, results and rankings.</p>
+<section class="login-card"><p class="eyebrow">STUDENT ACCESS</p><h1>Student Login</h1><p class="login-sub">Demo student access — no real student account is required. Enter any roll number and demo password.</p>
 <form id="studentForm"><input id="roll" required placeholder="College Roll Number"><input id="password" required type="password" placeholder="Password"><button class="primary large" type="submit">Login to Student Portal →</button></form>
-<p id="msg" class="message"></p><div class="login-help"><span>Join a quiz by QR or direct link after login.</span><a href="quiz.html">Open Demo Quiz</a></div></section></main>
+<p id="msg" class="message"></p><div class="login-help"><span>Demo password: <b>1234</b> &nbsp; Any roll number can be used.</span><a href="quiz.html">Open Quiz Link</a></div></section></main>
 </div><script>
-document.getElementById('studentForm').addEventListener('submit',e=>{e.preventDefault();document.getElementById('msg').textContent='Login accepted for demo. Student portal is ready.';setTimeout(()=>location.href='student-portal.html',500)});
+document.getElementById('studentForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const roll=document.getElementById('roll').value.trim();
+ const password=document.getElementById('password').value;
+ const msg=document.getElementById('msg');
+ if(!roll||password!=='1234'){msg.textContent='Enter any roll number and use demo password: 1234';return;}
+ sessionStorage.setItem('aqpStudentRoll',roll);
+ sessionStorage.setItem('aqpStudentLoggedIn','true');
+ msg.textContent='Demo student login successful.';
+ setTimeout(()=>location.href='student-portal.html',400);
+});
 </script></body></html>
