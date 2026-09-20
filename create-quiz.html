@@ -35,10 +35,7 @@
 if(!localStorage.getItem('aqpFacultyLoggedIn')) location.href='faculty.html';
 const qs=[]; const max=30;
 const sourceFile=document.getElementById('sourceFile');
-const extractBtn=document.getElementById('extractBtn');
 sourceFile.addEventListener('change',handleFileSelected);
-
-extractBtn.addEventListener('click',extractSource);
 function aqpFileChosen(input){
  const f=input.files && input.files[0];
  const name=document.getElementById('fileName');
@@ -52,20 +49,24 @@ function aqpFileChosen(input){
 function handleFileSelected(){
  const f=sourceFile.files && sourceFile.files[0];
  const zone=document.getElementById('uploadZone');
+ const name=document.getElementById('fileName');
+ const status=document.getElementById('sourceStatus');
  if(!f){
-   document.getElementById('fileName').textContent='No file selected';
-   document.getElementById('sourceStatus').textContent='Please choose a PDF, DOC or DOCX file.';
+   name.textContent='No file selected';
+   status.textContent='Please choose a PDF, DOC or DOCX file.';
+   zone.classList.remove('file-selected');
    return;
  }
  const allowed=/\.(pdf|docx?)$/i.test(f.name);
  if(!allowed){
    sourceFile.value='';
-   document.getElementById('fileName').textContent='Unsupported file type';
-   document.getElementById('sourceStatus').textContent='Please choose PDF, DOC or DOCX.';
+   name.textContent='Unsupported file type';
+   status.textContent='Please choose PDF, DOC or DOCX.';
+   zone.classList.remove('file-selected');
    return;
  }
- document.getElementById('fileName').textContent='✓ '+f.name+' • '+Math.max(1,Math.round(f.size/1024))+' KB';
- document.getElementById('sourceStatus').textContent='File selected successfully. Now click Extract Content.';
+ name.textContent='✓ '+f.name+' • '+Math.max(1,Math.round(f.size/1024))+' KB';
+ status.textContent='✓ File selected. Click Extract Content.';
  zone.classList.add('file-selected');
 }
 async function extractSource(){
@@ -92,18 +93,24 @@ async function extractSource(){
     text+='\\n';
    }
   }else{
-   if(!window.mammoth){
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+   // DOCX is a ZIP file containing word/document.xml. Use Mammoth when available,
+   // then fall back to the browser's built-in ZIP decompression so GitHub Pages
+   // does not depend on an external document-reader CDN.
+   try{
+     if(!window.mammoth){
+       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+     }
+     if(window.mammoth){
+       const result=await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});
+       text=(result.value||'').trim();
+     }
+   }catch(mammothErr){
+     console.warn('Mammoth reader failed; using native DOCX reader:',mammothErr);
+     text='';
    }
-   if(!window.mammoth){
-    await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min.js');
-   }
-   if(!window.mammoth) throw new Error('Word reader failed to load');
-   const result=await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});
-   text=(result.value||'').trim();
+   if(!text) text=await extractDocxNative(f);
    if(!text) throw new Error('The Word document contains no readable text');
   }
-  document.getElementById('sourceText').value=text.slice(0,120000);
   if(!text.trim()) throw new Error('No readable text was extracted from this document');
   document.getElementById('sourceText').value=text.slice(0,120000);
   document.getElementById('sourceStatus').textContent='✓ Content extracted: '+text.trim().length.toLocaleString()+' characters. Now click Prepare Quiz from Document.';
@@ -112,6 +119,85 @@ async function extractSource(){
    document.getElementById('sourceStatus').textContent='ERROR: '+(err.message||'Could not read this file')+'. Try again or use a text-based PDF/DOCX.';
  }
 }
+
+async function extractDocxNative(file){
+ const buffer=await file.arrayBuffer();
+ const view=new DataView(buffer);
+ const bytes=new Uint8Array(buffer);
+ const dec=new TextDecoder('utf-8');
+ const u16=(p)=>view.getUint16(p,true);
+ const u32=(p)=>view.getUint32(p,true);
+
+ // Locate the ZIP End Of Central Directory record.
+ let eocd=-1;
+ const start=Math.max(0,bytes.length-22-65535);
+ for(let p=bytes.length-22;p>=start;p--){
+   if(u32(p)===0x06054b50){eocd=p;break;}
+ }
+ if(eocd<0) throw new Error('This is not a valid DOCX/ZIP file');
+
+ const count=u16(eocd+10);
+ const cdOffset=u32(eocd+16);
+ let p=cdOffset;
+ let documentEntry=null;
+
+ for(let i=0;i<count && p+46<=bytes.length;i++){
+   if(u32(p)!==0x02014b50) break;
+   const method=u16(p+10);
+   const compressedSize=u32(p+20);
+   const nameLen=u16(p+28);
+   const extraLen=u16(p+30);
+   const commentLen=u16(p+32);
+   const localOffset=u32(p+42);
+   const name=dec.decode(bytes.slice(p+46,p+46+nameLen));
+   if(name==='word/document.xml'){
+     documentEntry={method,compressedSize,localOffset};
+     break;
+   }
+   p+=46+nameLen+extraLen+commentLen;
+ }
+ if(!documentEntry) throw new Error('word/document.xml was not found in the DOCX file');
+
+ const lp=documentEntry.localOffset;
+ if(u32(lp)!==0x04034b50) throw new Error('Invalid DOCX local file header');
+ const localNameLen=u16(lp+26);
+ const localExtraLen=u16(lp+28);
+ const dataStart=lp+30+localNameLen+localExtraLen;
+ const compressed=bytes.slice(dataStart,dataStart+documentEntry.compressedSize);
+
+ let xmlBytes;
+ if(documentEntry.method===0){
+   xmlBytes=compressed;
+ }else if(documentEntry.method===8){
+   if(typeof DecompressionStream==='undefined'){
+     throw new Error('This browser does not support DOCX decompression. Please use Chrome or Edge.');
+   }
+   const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+   xmlBytes=new Uint8Array(await new Response(stream).arrayBuffer());
+ }else{
+   throw new Error('Unsupported DOCX compression method: '+documentEntry.method);
+ }
+
+ const xml=dec.decode(xmlBytes);
+ const doc=new DOMParser().parseFromString(xml,'application/xml');
+ if(doc.querySelector('parsererror')) throw new Error('Could not read the Word document XML');
+
+ const paragraphs=[...doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','p')];
+ const lines=[];
+ for(const p of paragraphs){
+   let line='';
+   for(const node of p.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','t')){
+     line+=node.textContent||'';
+   }
+   for(const br of p.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','br')){
+     if(line.trim()) lines.push(line.trim());
+     line='';
+   }
+   if(line.trim()) lines.push(line.trim());
+ }
+ return lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+
 function loadScript(src){
  return new Promise((resolve,reject)=>{
    const s=document.createElement('script'); s.src=src; s.async=true;
