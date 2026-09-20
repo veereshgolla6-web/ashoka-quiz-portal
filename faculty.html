@@ -9,7 +9,8 @@
 <section class="login-card"><p class="eyebrow">FACULTY ACCESS</p><h1>Faculty Login</h1><p class="login-sub">Demo faculty access — no real faculty account is required in this version.</p>
 <form id="facultyForm"><input id="facultyName" required autocomplete="username" placeholder="Demo Faculty ID" value="faculty"><input id="password" required type="password" placeholder="Demo Password" value="1234"><button class="primary large" type="submit">Enter Faculty Dashboard →</button></form>
 <p id="msg" class="message"></p><div class="login-help"><span>Demo ID: <b>faculty</b> &nbsp; Password: <b>1234</b></span><a href="index.html">Back to Home</a></div></section></main>
-</div><<script>
+</div>
+<script>
 document.getElementById('facultyForm').addEventListener('submit',e=>{
  e.preventDefault();
  const id=document.getElementById('facultyName').value.trim();
@@ -22,4 +23,4 @@ document.getElementById('facultyForm').addEventListener('submit',e=>{
  msg.textContent='Demo login successful. Opening dashboard...';
  setTimeout(()=>location.href='faculty-dashboard.html',300);
 });
-</script></body></html></body></html>
+</script></body></html>
