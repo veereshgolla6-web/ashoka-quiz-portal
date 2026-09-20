@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create Quiz | Ashoka Quiz Portal</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="portal-page">
+<header class="topbar"><a class="brand" href="faculty-dashboard.html"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a><nav><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="create-quiz.html">Create Quiz</a><a href="leaderboard.html">Leaderboard</a></nav><button class="outline" onclick="location.href='faculty-dashboard.html'">← Dashboard</button></header>
+<main class="dashboard">
+<section class="page-title"><div><p class="eyebrow">FACULTY • QUIZ CREATOR</p><h1>Create New Quiz</h1><p>Build a 25–30 question MCQ assessment and publish it for students.</p></div><button class="outline" onclick="location.href='faculty-dashboard.html'">Cancel</button></section>
+<section class="dash-card" style="margin-bottom:18px"><div class="builder-form-grid">
+<input id="title" placeholder="Quiz Title *"><select id="subject"><option value="">Select Subject *</option><option>Python Programming</option><option>Data Structures</option><option>Artificial Intelligence</option><option>Engineering Mathematics</option><option>Database Management Systems</option><option>Computer Networks</option></select>
+<select id="department"><option>CSE</option><option>CSEAI</option><option>ECE</option><option>EEE</option><option>CIVIL</option><option>All Departments</option></select>
+<select id="year"><option>I Year</option><option>II Year</option><option>III Year</option><option>IV Year</option></select>
+<select id="section"><option>All Sections</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option></select>
+<input id="duration" type="number" min="5" value="30" placeholder="Duration (minutes)">
+</div></section>
+<section class="dash-card"><div class="quiz-editor-head"><div><p class="eyebrow">QUESTION BANK</p><h2>Questions <span id="counter">0 / 25</span></h2></div><button class="ghost" onclick="addQuestion()">＋ Add Question</button></div><div id="questions"></div>
+<div class="publish-bar"><span id="status">Add your questions. Correct answers are required.</span><button class="outline" onclick="saveDraft()">Save Draft</button><button class="primary" onclick="publishQuiz()">Publish Quiz →</button></div></section>
+</main></div>
+<script>
+if(!localStorage.getItem('aqpFacultyLoggedIn')) location.href='faculty.html';
+const qs=[]; const max=30;
+function addQuestion(data={}){
+ if(qs.length>=max){alert('Maximum 30 questions reached.');return}
+ qs.push(data); render();
+}
+function render(){
+ const box=document.getElementById('questions');
+ box.innerHTML=qs.map((q,i)=>`<article class="question-editor"><div class="question-editor-top"><b>Question ${i+1}</b><button class="remove-q" onclick="removeQuestion(${i})">Remove</button></div>
+<textarea class="qtext" placeholder="Enter question text..." oninput="qs[${i}].text=this.value">${q.text||''}</textarea>
+<div class="option-grid">${['A','B','C','D'].map((o,j)=>`<label><span>Option ${o}</span><input value="${q.options?.[j]||''}" oninput="qs[${i}].options=qs[${i}].options||[];qs[${i}].options[${j}]=this.value"></label>`).join('')}</div>
+<div class="answer-row"><span>Correct Answer</span><select onchange="qs[${i}].correct=this.value"><option value="">Select</option><option ${q.correct==='A'?'selected':''}>A</option><option ${q.correct==='B'?'selected':''}>B</option><option ${q.correct==='C'?'selected':''}>C</option><option ${q.correct==='D'?'selected':''}>D</option></select><input type="number" min="1" value="${q.marks||1}" oninput="qs[${i}].marks=Number(this.value)" placeholder="Marks"></div></article>`).join('');
+ document.getElementById('counter').textContent=qs.length+' / 30';
+}
+function removeQuestion(i){qs.splice(i,1);render()}
+function payload(){return {title:document.getElementById('title').value.trim(),subject:document.getElementById('subject').value,department:document.getElementById('department').value,year:document.getElementById('year').value,section:document.getElementById('section').value,duration:Number(document.getElementById('duration').value),questions:qs,createdBy:localStorage.getItem('aqpFacultyName')||'Faculty'}}
+function valid(){
+ const p=payload();
+ if(!p.title||!p.subject){alert('Enter Quiz Title and select Subject.');return false}
+ if(qs.length<25){alert('Please add at least 25 questions before publishing.');return false}
+ for(let i=0;i<qs.length;i++){if(!qs[i].text||!qs[i].options||qs[i].options.length<4||qs[i].options.some(x=>!x)||!qs[i].correct){alert('Complete Question '+(i+1)+' including all options and correct answer.');return false}}
+ return true
+}
+function saveDraft(){localStorage.setItem('aqpQuizDraft',JSON.stringify(payload()));document.getElementById('status').textContent='Draft saved successfully.'}
+function publishQuiz(){if(!valid())return;const p=payload();p.id='QZ-'+Date.now();p.status='Published';localStorage.setItem('aqpPublishedQuiz',JSON.stringify(p));document.getElementById('status').textContent='Quiz published successfully. Student access is ready.';setTimeout(()=>location.href='faculty-dashboard.html',900)}
+for(let i=0;i<25;i++) addQuestion();
+</script></body></html>
