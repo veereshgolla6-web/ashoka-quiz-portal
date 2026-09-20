@@ -64,3 +64,9 @@ em{color:#5d3be9}
 .login-help a{color:#5d3be9;font-weight:700}
 @media(max-width:800px){.info-grid{grid-template-columns:1fr 1fr}.topbar nav.mobile-open{display:flex;position:absolute;top:78px;left:0;right:0;padding:16px 6%;background:#fff;border-bottom:1px solid var(--line);flex-direction:column;gap:16px}.topbar nav.mobile-open a.active:after{display:none}}
 @media(max-width:600px){.info-grid{grid-template-columns:1fr}.login-card{padding:25px}.login-card h1{font-size:28px}}
+
+/* Faculty dashboard builder */
+.builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.portal-card select,.portal-card input{width:100%;padding:12px;margin:7px 0;border:1px solid var(--line);border-radius:9px;outline:none;background:#fff}
+.portal-card select:focus,.portal-card input:focus{border-color:#a99bff;box-shadow:0 0 0 4px #6d4aff12}
+@media(max-width:600px){.builder-grid{grid-template-columns:1fr}}
