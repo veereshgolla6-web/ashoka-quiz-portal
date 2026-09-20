@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Ashoka Quiz Portal - Online Quiz & Assessment Platform">
+<title>Ashoka Quiz Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+<a class="brand" href="#home"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></a>
+<nav><a href="#home">Home</a><a href="#features">Features</a><a href="#departments">Departments</a><a href="#leaderboard">Leaderboard</a></nav>
+<div class="top-actions"><button class="ghost" data-view="student">Student</button><button class="primary" data-view="faculty">Faculty Login</button></div>
+<button class="menu" aria-label="Menu">☰</button>
+</header>
+
+<main id="home">
+<section class="hero">
+<div class="hero-copy">
+<div class="eyebrow"><span></span> SMART • SECURE • SIMPLE</div>
+<h1>Learn. Challenge.<br><em>Lead the Board.</em></h1>
+<p>A modern quiz and assessment platform for B.Tech students. Faculty create quizzes, students join instantly by QR or link, and results are calculated automatically.</p>
+<div class="hero-actions"><button class="primary large" data-view="student">Join a Quiz <span>→</span></button><button class="outline large" data-view="faculty">Faculty Dashboard</button></div>
+<div class="trust"><div><strong>25–30</strong><span>MCQs per quiz</span></div><div><strong>5</strong><span>Departments</span></div><div><strong>100%</strong><span>Auto evaluation</span></div></div>
+</div>
+<div class="hero-card">
+<div class="card-glow"></div>
+<div class="quiz-window">
+<div class="window-top"><span class="live-dot"></span><span>LIVE QUIZ</span><b>12:48</b></div>
+<div class="progress"><i></i></div>
+<p class="qcount">QUESTION 12 OF 30</p>
+<h3>Which data structure follows the FIFO principle?</h3>
+<div class="options"><button>A&nbsp;&nbsp; Stack</button><button class="selected">B&nbsp;&nbsp; Queue <span>✓</span></button><button>C&nbsp;&nbsp; Tree</button><button>D&nbsp;&nbsp; Graph</button></div>
+<div class="quiz-foot"><span>● 11 answered</span><button>Next →</button></div>
+</div>
+<div class="floating rank"><span>🏆</span><div><small>YOUR RANK</small><strong>#07</strong></div></div>
+<div class="floating score"><span>⚡</span><div><small>SCORE</small><strong>92%</strong></div></div>
+</div>
+</section>
+
+<section class="stats"><div><b>01</b><span>Join by QR / Link</span></div><div><b>02</b><span>Timed assessment</span></div><div><b>03</b><span>Instant result</span></div><div><b>04</b><span>Merit ranking</span></div></section>
+
+<section id="features" class="section">
+<div class="section-head"><div><p class="eyebrow">BUILT FOR ACADEMICS</p><h2>Everything needed for<br><em>smarter assessments.</em></h2></div><p>From question creation to performance reports, Ashoka Quiz Portal brings the complete quiz workflow into one place.</p></div>
+<div class="feature-grid">
+<article><span>✦</span><h3>Quick Quiz Creation</h3><p>Create 25–30 MCQ quizzes with subjects, duration, marks and answer keys.</p></article>
+<article><span>⌁</span><h3>QR & Link Access</h3><p>Publish a quiz and let students join directly from their phones.</p></article>
+<article><span>◷</span><h3>Smart Timer</h3><p>Automatic countdown with secure submission when time expires.</p></article>
+<article><span>✓</span><h3>Auto Evaluation</h3><p>Marks and completion time are calculated instantly after submission.</p></article>
+<article><span>♛</span><h3>Fair Ranking</h3><p>Higher marks rank first; equal marks are ordered by completion time.</p></article>
+<article><span>▥</span><h3>Performance Reports</h3><p>View quiz, student, subject and department-level performance insights.</p></article>
+</div>
+</section>
+
+<section id="departments" class="section departments"><div class="section-head"><div><p class="eyebrow">ACADEMIC STRUCTURE</p><h2>One portal for every<br><em>department.</em></h2></div></div>
+<div class="dept-grid"><div>CSE<span>Computer Science & Engineering</span></div><div>CSEAI<span>CSE – Artificial Intelligence</span></div><div>ECE<span>Electronics & Communication</span></div><div>EEE<span>Electrical & Electronics</span></div><div>CIVIL<span>Civil Engineering</span></div></div>
+</section>
+
+<section id="leaderboard" class="section leaderboard"><div class="section-head"><div><p class="eyebrow">LIVE PERFORMANCE</p><h2>Top performers</h2></div><button class="outline" data-view="student">View all rankings →</button></div>
+<div class="table"><div class="thead"><span>Rank</span><span>Student</span><span>Department</span><span>Score</span><span>Time</span></div>
+<div class="row"><b>01</b><span>Student A</span><span>CSEAI</span><strong>30/30</strong><span>14:21</span></div>
+<div class="row"><b>02</b><span>Student B</span><span>CSE</span><strong>29/30</strong><span>12:46</span></div>
+<div class="row"><b>03</b><span>Student C</span><span>ECE</span><strong>29/30</strong><span>16:08</span></div></div>
+</section>
+
+<section class="cta"><div><p class="eyebrow">READY TO BEGIN?</p><h2>Turn every quiz into<br><em>a learning experience.</em></h2></div><button class="primary large" data-view="student">Enter Quiz Portal →</button></section>
+</main>
+
+<div id="portal" class="portal hidden">
+<div class="portal-card"><button class="close" aria-label="Close">×</button><div id="portal-content"></div></div>
+</div>
+<footer><div class="brand"><span class="brand-mark">AQ</span><span><b>Ashoka Quiz Portal</b><small>Ashoka Women’s Engineering College (Autonomous)</small></span></div><p>© 2026 Ashoka Quiz Portal. Built for smarter learning.</p></footer>
+</div>
+<script src="script.js"></script>
+</body></html>
